@@ -1,0 +1,37 @@
+[gd_scene load_steps=3 format=1]
+
+[sub_resource type="RectangleShape2D" id=3]
+
+custom_solver_bias = 0.0
+extents = Vector2( 2, 21 )
+
+[sub_resource type="GDScript" id=2]
+
+script/source = "extends Area2D
+
+func _ready():
+	connect(\"body_enter\",self,\"_on_body_enter\")
+	
+func _on_body_enter(collider):
+	if collider.is_in_group(game.GROUP_BIRDS):
+		game.score += 1"
+
+[node name="coin" type="Area2D"]
+
+input/pickable = true
+shapes/0/shape = SubResource( 3 )
+shapes/0/transform = Matrix32( 1, 0, 0, 1, 0, 0 )
+shapes/0/trigger = false
+gravity_vec = Vector2( 0, 1 )
+gravity = 98.0
+linear_damp = 0.1
+angular_damp = 1.0
+script/script = SubResource( 2 )
+
+[node name="shape" type="CollisionShape2D" parent="."]
+
+shape = SubResource( 3 )
+trigger = false
+_update_shape_index = 0
+
+
