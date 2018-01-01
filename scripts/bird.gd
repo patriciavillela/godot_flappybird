@@ -9,11 +9,14 @@ const STATE_GROUNDED = 3
 
 const SPEED = 50
 
+var prev_state
+
 signal state_changed
 
 func _ready():
 	set_fixed_process(true)
 	set_process_input(true)
+	set_process_unhandled_input(true)
 	connect("body_enter",self,"_on_body_enter")
 	add_to_group(game.GROUP_BIRDS)
 	pass
@@ -27,9 +30,14 @@ func _fixed_process(delta):
 
 func _input(event):
 	state.input(event)
+
+func _unhandled_input(event):
+	if state.has_method("unhandled_input"):
+		state.unhandled_input(event)
 	
 func set_state(new_state):
 	state.exit()
+	prev_state = get_state()
 	if new_state == STATE_FLYING:
 		state = FlyingState.new(self)
 	elif new_state == STATE_FLAPPING:
@@ -86,6 +94,11 @@ class FlappingState:
 	func input(event):
 		if event.is_action_pressed("flap"):
 			flap()
+	func unhandled_input(event):
+		if event.type != InputEvent.MOUSE_BUTTON or !event.is_pressed() or event.is_echo():
+			return
+		if event.button_index == BUTTON_LEFT: flap()
+		
 	func exit():
 		pass
 		
@@ -93,6 +106,7 @@ class FlappingState:
 		bird.set_linear_velocity(Vector2(bird.get_linear_velocity().x,-150))
 		bird.set_angular_velocity(-3)
 		bird.get_node("anim").play("flap")
+		audio_player.play("sfx_wing")
 	
 	func on_body_enter(colider):
 		if colider.is_in_group(game.GROUP_PIPES):
@@ -109,6 +123,8 @@ class HitState:
 		bird.set_angular_velocity(2)
 		var collider = bird.get_colliding_bodies()[0]
 		bird.add_collision_exception_with(collider)
+		audio_player.play("sfx_hit")
+		audio_player.play("sfx_die")
 	func update(delta):
 		pass
 	func input(event):
@@ -125,6 +141,8 @@ class GroundedState:
 		self.bird = bird
 		bird.set_linear_velocity(Vector2(0,0))
 		bird.set_angular_velocity(0)
+		if bird.prev_state != bird.STATE_HIT:
+			audio_player.play("sfx_hit")
 	func update(delta):
 		pass
 	func input(event):

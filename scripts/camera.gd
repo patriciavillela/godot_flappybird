@@ -1,6 +1,6 @@
 extends Camera2D
 
-onready var bird = get_node("/root/world/bird")
+onready var bird = utils.get_main_node().get_node("bird")
 
 func _ready():
 	set_fixed_process(true)
